@@ -1,0 +1,43 @@
+---
+- hosts: web
+  become: True
+  tasks:
+    - name: Install Web Servers
+      dnf:
+        name: httpd
+        state: present
+    
+    - name: Start our web services
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Copy web content
+      template:
+        src: templates/{{ ansible_hostname }}.j2
+        dest: /var/www/html/index.html
+    
+    - name: Enusre firewalld is running
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Open ports for http and https
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: true
+      loop:
+        - 80/tcp
+        - 22/tcp
+        - 443/tcp
+ 
+          #  - name: Install haproxy
+          #- name: Start haproxy service
+          #- name: Ensure haproxy is configured
+          #- name: Make sure the ports are open for http and https traffic
+          #- name: Make sure our SSL certs are inplace for https traffic
+          #- name: Ensure webservers are added to haproxy 

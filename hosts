@@ -1,0 +1,9 @@
+[acs]
+master
+[lb]
+haproxylb1
+haproxylb2
+[web]
+webserver1
+webserver2
+webserver3
