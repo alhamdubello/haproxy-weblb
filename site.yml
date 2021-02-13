@@ -72,6 +72,23 @@
 - hosts: lb
   become: true
   tasks:
+    - name: Install keepalived
+      dnf:
+        name: keepalived
+        state: present
+    
+    - name: Starting the keepalived service
+      systemd:
+        name: keepalived
+        state: started
+        enabled: yes
+    
+    - name: KeepaliveD configuration
+      template:
+        src: templates/keepalived.{{ ansible_hostname }}.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+      notify: restart keepalived
+
     - name: Install haproxy
       dnf:
         name: haproxy
@@ -112,5 +129,8 @@
       systemd:
         name: haproxy
         state: restarted
-
+    - name: restart keepalived
+      systemd:
+        name: keepalived
+        state: restarted
           #- name: Make sure our SSL certs are inplace for https traffic
