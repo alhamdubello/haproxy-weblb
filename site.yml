@@ -94,12 +94,6 @@
         name: haproxy
         state: present
 
-    - name: Start haproxy service
-      systemd:
-        name: haproxy
-        state: started
-        enabled: yes
-
     - name: Enusre firewalld is running
       systemd:
         name: firewalld
@@ -116,7 +110,16 @@
         - 80/tcp
         - 22/tcp
         - 443/tcp
-    
+   
+    - name: Copy updated SSL certificate
+      copy:
+        src: templates/certs/stockcheckerapp.com.pem
+        dest: /etc/pki/tls/certs/stockcheckerapp.com.pem
+        owner: root
+        group: root
+        mode: '0777'
+      tags: copyssl
+ 
     - name: Ensure haproxy is configured
       template:
         src: templates/haproxy.j2
@@ -124,6 +127,12 @@
       notify: restart haproxy
       tags: haproxyconfig
       
+    - name: Start haproxy service
+      systemd:
+        name: haproxy
+        state: started
+        enabled: yes
+
   handlers:
     - name: restart haproxy
       systemd:
