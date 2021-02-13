@@ -1,0 +1,35 @@
+global
+    maxconn 50000
+    log /dev/log local0
+    user haproxy
+    group haproxy
+    #stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 660 level admin
+    nbproc 2
+    nbthread 4
+    cpu-map auto:1/1-4 0-3
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
+    ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+defaults
+    timeout connect 10s
+    timeout client 30s
+    timeout server 30s
+    log global
+    mode http
+    option httplog
+    maxconn 3000
+
+frontend http-80andhttps-443
+  bind *:80
+  #bind *:443 ssl crt /path/to/proxy/sslcert/cert.pem apln h2,http/1.1
+  timeout client 60s
+  mode http
+  use_backend  app1_servers
+
+backend app1_servers
+  timeout connect 10s
+  timeout server 5s
+  mode http
+  server webserver1 192.168.56.197:80
+  server webserver2 192.168.56.193:80
+  server webserver3 192.168.56.192:80

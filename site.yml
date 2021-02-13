@@ -1,4 +1,35 @@
 ---
+- hosts: all
+  become: true
+  tasks:
+    - name: Add mappings to /etc/hosts
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          {{ item.ip }} {{ item.name }}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+      loop:
+        - { name: webserver1, ip: 192.168.56.197 }
+        - { name: webserver2, ip: 192.168.56.193 }
+        - { name: webserver3, ip: 192.168.56.192 }
+        - { name: haproxylb1, ip: 192.168.56.199 }
+        - { name: haproxylb2, ip: 192.168.56.198 }
+
+    - name: All servers should have EPEL
+      dnf:
+        name: epel-release
+        state: present
+
+    - name: Checking for SELINUX enforcing
+      lineinfile:
+        path: /etc/selinux/config
+        regex: '^SELINUX=enforcing'
+        line: 'SELINUX=disabled'
+      notify: reboot server
+  handlers:
+    - name: reboot server
+      command: reboot
+
 - hosts: web
   become: True
   tasks:
@@ -34,10 +65,50 @@
         - 80/tcp
         - 22/tcp
         - 443/tcp
- 
-          #  - name: Install haproxy
-          #- name: Start haproxy service
-          #- name: Ensure haproxy is configured
-          #- name: Make sure the ports are open for http and https traffic
+
+          ##Haproxy Section
+
+- hosts: lb
+  become: true
+  tasks:
+    - name: Install haproxy
+      dnf:
+        name: haproxy
+        state: present
+
+    - name: Start haproxy service
+      systemd:
+        name: haproxy
+        state: started
+        enabled: yes
+
+    - name: Enusre firewalld is running
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Open ports for http and https
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: true
+      loop:
+        - 80/tcp
+        - 22/tcp
+        - 443/tcp
+    
+    - name: Ensure haproxy is configured
+      template:
+        src: templates/haproxy.j2
+        dest:  /etc/haproxy/haproxy.cfg
+      notify: restart haproxy
+      
+  handlers:
+    - name: restart haproxy
+      systemd:
+        name: haproxy
+        state: restarted
+
           #- name: Make sure our SSL certs are inplace for https traffic
-          #- name: Ensure webservers are added to haproxy 
