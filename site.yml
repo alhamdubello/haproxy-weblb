@@ -105,6 +105,7 @@
         src: templates/haproxy.j2
         dest:  /etc/haproxy/haproxy.cfg
       notify: restart haproxy
+      tags: haproxyconfig
       
   handlers:
     - name: restart haproxy
