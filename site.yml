@@ -44,6 +44,7 @@
         state: started
         enabled: yes
 
+
     - name: Copy web content
       template:
         src: templates/{{ ansible_hostname }}.j2
