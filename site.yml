@@ -126,6 +126,17 @@
         mode: '0777'
       tags: copyssl
  
+    - name: create custom error
+      file:
+        path: /etc/haproxy/errors-custom
+        state: directory
+        mode: '0755'
+
+    - name: copy custom http error files
+      copy:
+        src: files/errors-custom
+        dest: /etc/haproxy
+
     - name: Ensure haproxy is configured
       template:
         src: templates/haproxy.j2
