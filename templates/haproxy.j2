@@ -2,10 +2,8 @@ global
     maxconn 50000
     log /dev/log local0
     chroot /var/lib/haproxy
-   
     user haproxy
     group haproxy
-    #stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 660 level admin
     nbproc 2
     nbthread 4
     cpu-map auto:1/1-4 0-3
@@ -20,6 +18,16 @@ defaults
     mode http
     option httplog
     maxconn 3000
+
+frontend stats
+    bind *:8404
+    mode http
+    stats hide-version  # Hide HAProxy version
+    stats realm Haproxy\ Statistics  # Title text for popup window
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+    stats admin if LOCALHOST
 
 frontend http-80andhttps-443
   bind *:80

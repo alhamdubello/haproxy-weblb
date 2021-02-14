@@ -115,6 +115,7 @@
         - 80/tcp
         - 22/tcp
         - 443/tcp
+        - 8404/tcp
    
     - name: Copy updated SSL certificate
       copy:
